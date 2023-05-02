@@ -28,6 +28,14 @@ export default async function handler(
   const loader = new PDFLoader(blob);
 
   const hash = createHash("sha256").update(buffer).digest("hex");
+  const fileName = `documents/${hash}.json`;
+  if (fs.existsSync(fileName)) {
+    res.status(200).json({
+      success: true,
+      fileHash: hash,
+    });
+    return;
+  }
 
   const fileDocs = await loader.load();
   if (fileDocs.length === 0) {
@@ -104,8 +112,6 @@ export default async function handler(
     null,
     2
   );
-
-  const fileName = `documents/${hash}.json`;
 
   await fs.promises.mkdir("documents", { recursive: true }).catch(() => {});
 

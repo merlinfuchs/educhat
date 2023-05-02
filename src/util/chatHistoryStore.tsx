@@ -20,6 +20,6 @@ export const useChatHistoryStore = create<ChatHistoryStore>()(
         set((state) => ({ messages: [...state.messages, message] })),
       clearMessages: () => set({ messages: [] }),
     }),
-    { name: "chat-history" }
+    { name: "chat-history", version: 1 }
   )
 );

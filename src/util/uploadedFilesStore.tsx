@@ -35,6 +35,6 @@ export const useUploadedFilesStore = create<UploadedFilesStore>()(
           return { files };
         }),
     }),
-    { name: "uploaded-files" }
+    { name: "uploaded-files", version: 1 }
   )
 );

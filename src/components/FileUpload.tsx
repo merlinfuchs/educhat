@@ -1,11 +1,17 @@
 import { useUploadedFilesStore } from "@/util/uploadedFilesStore";
 import { UploadDocumentRequest, UploadDocumentResponse } from "@/util/wire";
-import { ChangeEvent, useRef } from "react";
+import { ChangeEvent, useRef, useState } from "react";
+import UploadModal from "./UploadModal";
 
 export default function FileUpload() {
   const addFile = useUploadedFilesStore((state) => state.addFile);
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "done"
+  >("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   function handleFile(e: ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -23,6 +29,7 @@ export default function FileUpload() {
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
 
+        setUploadStatus("uploading");
         fetch("/api/document", {
           method: "POST",
           body: JSON.stringify({
@@ -33,6 +40,9 @@ export default function FileUpload() {
           },
         })
           .then(async (resp) => {
+            setUploadStatus("done");
+            setUploadError(null);
+
             const data: UploadDocumentResponse = await resp.json();
             if (data.success) {
               addFile({
@@ -42,11 +52,13 @@ export default function FileUpload() {
                 selected: false,
               });
             } else {
-              alert(`Failed to upload and vectorize file: ${data.error}`);
+              setUploadStatus("done");
+              setUploadError(`${data.error}`);
             }
           })
           .catch((err) => {
-            alert(`Failed to upload and vectorize file: ${err}`);
+            setUploadStatus("done");
+            setUploadError(`${err}`);
           });
       };
       reader.readAsDataURL(file);
@@ -69,6 +81,11 @@ export default function FileUpload() {
       >
         Upload File
       </button>
+      <UploadModal
+        status={uploadStatus}
+        close={() => setUploadStatus("idle")}
+        error={uploadError}
+      />
     </div>
   );
 }
