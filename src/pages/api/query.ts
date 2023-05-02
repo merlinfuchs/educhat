@@ -1,11 +1,12 @@
 import { OpenAI } from "langchain/llms/openai";
-import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { HNSWLib } from "langchain/vectorstores/hnswlib";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import { NextApiRequest, NextApiResponse } from "next";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { QueryRequest, QueryResponse } from "@/util/wire";
+import fs from "fs";
+import { Document } from "langchain/document";
 
 export default async function handler(
   req: NextApiRequest,
@@ -16,10 +17,11 @@ export default async function handler(
 
   try {
     for (const fileHash of data.fileHashes) {
-      const fileName = `documents/${fileHash}.pdf`;
-      const loader = new PDFLoader(fileName);
+      const fileName = `documents/${fileHash}.json`;
 
-      const fileDocs = await loader.load();
+      const fileDump = await fs.promises.readFile(fileName, "utf8");
+
+      const fileDocs = JSON.parse(fileDump).map((d: any) => new Document(d));
 
       const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1000,
